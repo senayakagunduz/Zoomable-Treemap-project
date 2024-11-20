@@ -1,0 +1,138 @@
+/* /* svg {
+    display: block;
+    margin: auto;
+    border: 1px solid #ccc;
+  }
+  
+  rect {
+    fill: #69b3a2;
+    stroke: #3019b8;
+  }
+   */
+
+   /* app-treemap *,
+app-treemap *:before,
+app-treemap *:after {
+  box-sizing: border-box;
+}
+
+app-treemap{
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  position: absolute;
+}
+
+app-treemap .feature {
+  position: relative;
+  width: calc(100% - 10px);
+  height: calc(100% - 10px);
+  margin: 5px;
+  background: #aaa;
+  border: 1px solid black;
+}
+
+app-treemap .feature .child{
+  position: absolute;
+  width: 100%;
+  height: calc(100% - 1.5em);
+}
+
+app-treemap .feature .parent{
+  display:block;
+  height:1.5em;
+  line-height: 1.5em;
+  font-weight: bold;
+}
+
+app-treemap .feature .parent span{
+  cursor: pointer;
+}
+
+app-treemap .feature .parent span + span:before{
+  content: ">";
+  padding: 0 5px;
+}
+
+app-treemap .node {
+  position: absolute;
+  border: 1px white solid;
+  overflow: hidden;
+  -webkit-transition: opacity .8s;
+  transition: opacity .8s;
+} */
+
+/* app-treemap .node .label {
+  display: inline;
+  font-family: sans-serif;
+  color: rgba(255, 255, 255, 1);
+  white-space: nowrap;
+  position: absolute;
+  margin: 0;
+}
+
+app-treemap .node .zoompoint{
+  cursor: pointer;
+}
+
+app-treemap .node .labelcheckbox{
+  vertical-align: middle;
+} */
+
+/* app-treemap .node:hover {
+  opacity: 1;
+} */
+
+/*app-treemap .node:hover .label {
+  -webkit-filter: blur(10px);
+    filter: blur(10px);}
+*/
+
+/* app-treemap .node.level-0 {
+  z-index: 4;
+  font-size: 2vmin;
+  display: none;
+}
+
+app-treemap .node.level-1 {
+  z-index: 3;
+  font-size: 1vmin;
+}
+
+app-treemap .node.level-1 .label {
+  top: 0;
+  left: 0;
+} */
+
+/* app-treemap .node.level-2 {
+  z-index: 2;
+  font-size: 1vmin;
+}
+
+app-treemap .node.level-2 .label {
+  bottom: 0;
+  right: 0;
+} */
+
+
+/* app-treemap .node.level-3 {
+  z-index: 1;
+  font-size: 1vmin;
+
+} */
+
+:host {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+  
+  text {
+    pointer-events: none;
+    user-select: none;
+  }
