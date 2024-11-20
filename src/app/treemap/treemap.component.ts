@@ -2,6 +2,9 @@ import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import * as d3 from 'd3';
 import { TreeNode, treemapData } from './data';
 
+// TreemapNode, D3'ün HierarchyRectangularNode tipine ek alanlar (ör. leafUid, clipUid) ekler.
+//  Bu alanlar her düğümün benzersiz kimlikleri için kullanılır.
+
 interface TreemapNode extends d3.HierarchyRectangularNode<TreeNode> {
   leafUid?: { id: string; href: string };
   clipUid?: { id: string; href: string };
@@ -42,12 +45,15 @@ export class TreemapComponent implements OnInit {
 
   private readonly width = 928;
   private readonly height = 924;
+  //svg, group: D3 seçimleri. SVG ve altındaki g (grup) elemanları için kullanılır.
   private svg!: d3.Selection<SVGElement, unknown, null, undefined>;
   private group!: d3.Selection<SVGGElement, unknown, null, undefined>;
   private x!: d3.ScaleLinear<number, number>;
   private y!: d3.ScaleLinear<number, number>;
+  //format: Sayıları formatlamak için (örn. 1,000).
   private format = d3.format(",d");
 
+  //Angular bileşeni yüklendiğinde initializeTreemap() çağrılır.
   ngOnInit(): void {
     this.initializeTreemap();
   }
@@ -56,6 +62,7 @@ export class TreemapComponent implements OnInit {
     this.x = d3.scaleLinear().rangeRound([0, this.width]);
     this.y = d3.scaleLinear().rangeRound([0, this.height]);
 
+    //treemapRef: DOM'daki SVG elemanına erişmek için kullanılır.
     this.svg = d3.select(this.treemapRef.nativeElement)
       .attr("viewBox", [0.5, -30.5, this.width, this.height + 30])
       .attr("width", this.width)
@@ -77,13 +84,14 @@ export class TreemapComponent implements OnInit {
     //   .sum(d => d.value || 0)
     //   .sort((a, b) => (b.value || 0) - (a.value || 0));
 
-     const hierarchy = d3.hierarchy(treemapData)
+    //hierarşi oluşturulur
+    const hierarchy = d3.hierarchy(treemapData)
       .sum(d => d.value ?? 0)
       .sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
 
+    //treemap i uyguluyor
     const root = d3.treemap<TreeNode>()
       .tile(tile)(hierarchy) as TreemapNode;
-
     this.group = this.svg.append("g");
     this.render(this.group, root);
   }
@@ -98,13 +106,14 @@ export class TreemapComponent implements OnInit {
     return d.ancestors().reverse().map(d => d.data.name).join("/");
   }
 
+  //Veriyi SVG içinde düğümler ve dikdörtgenler olarak çizer.Düğümler: rect ve text elemanlarından oluşur.
   private render(group: d3.Selection<SVGGElement, unknown, null, undefined>, root: TreemapNode): void {
     const node = group
       .selectAll<SVGGElement, TreemapNode>("g")
       .data(root.children ? root.children.concat(root) : [root])
       .join("g");
 
-      node.filter((d) => (d === root ? !!d.parent : !!d.children)) // undefined'ı boolean'a çeviriyoruz
+    node.filter((d) => (d === root ? !!d.parent : !!d.children)) // undefined'ı boolean'a çeviriyoruz
       .attr("cursor", "pointer")
       .on("click", (event, d) => d === root ? this.zoomout(root) : this.zoomin(d));
 
@@ -147,30 +156,31 @@ export class TreemapComponent implements OnInit {
 
     this.position(group, root);
   }
-
+  //Düğümleri x ve y koordinatlarına göre pozisyonlar.
   private position(group: d3.Selection<SVGGElement, unknown, null, undefined>, root: TreemapNode): void {
     group.selectAll("g")
       .attr("transform", d => {
         const node = d as TreemapNode;
-        return node === root ? 
-          `translate(0,-30)` : 
+        return node === root ?
+          `translate(0,-30)` :
           `translate(${this.x(node.x0)},${this.y(node.y0)})`;
       })
       .select("rect")
       .attr("width", d => {
         const node = d as TreemapNode;
-        return node === root ? 
-          this.width : 
+        return node === root ?
+          this.width :
           this.x(node.x1) - this.x(node.x0);
       })
       .attr("height", d => {
         const node = d as TreemapNode;
-        return node === root ? 
-          30 : 
+        return node === root ?
+          30 :
           this.y(node.y1) - this.y(node.y0);
       });
   }
 
+  //Yakınlaştırma
   private zoomin(d: TreemapNode): void {
     const group0 = this.group.attr("pointer-events", "none");
     const group1 = this.group = this.svg.append("g").call(g => this.render(g, d));
@@ -187,6 +197,7 @@ export class TreemapComponent implements OnInit {
         .call(g => this.position(g.selection(), d)));
   }
 
+  //Uzaklaştırma:
   private zoomout(d: TreemapNode): void {
     if (!d.parent) return;
 
