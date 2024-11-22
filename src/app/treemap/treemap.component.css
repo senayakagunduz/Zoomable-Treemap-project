@@ -136,3 +136,8 @@ app-treemap .node.level-2 .label {
     pointer-events: none;
     user-select: none;
   }
+  .icon-design{
+    background-color: white;
+    border:1px solid grey;
+    padding: 10px;
+  }

@@ -4,6 +4,7 @@ import { AppComponent } from './app.component';
 import { TreemapComponent } from './treemap/treemap.component';
 
 @NgModule({
+  //her eklenen komponent declerations a gelecek
   declarations: [
     AppComponent,
     TreemapComponent
@@ -12,6 +13,7 @@ import { TreemapComponent } from './treemap/treemap.component';
     BrowserModule
   ],
   providers: [],
+  //başlangıç komponenttir
   bootstrap: [AppComponent]
 })
 export class AppModule { }
