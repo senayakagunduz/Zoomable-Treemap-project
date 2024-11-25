@@ -360,14 +360,8 @@ export class TreemapComponent implements OnInit {
       }
     };
 
-    // const hierarchy = d3.hierarchy(treemapData)
-    //   .sum(d => d.value || 1)
-    //   .sort((a, b) => (b.value || 0) - (a.value || 0));
-
-    // hierarşi oluşturulur
     const hierarchy = d3.hierarchy(treemapData)
-      .sum(d => d.value ?? 0)
-      .sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
+      .sum(d => 1); // Her düğümün varsayılan değeri 1, value attribute u datada olmadan hiyerarşiyi bu şekilde oluşturuyorum 
 
     //treemap i uyguluyor
     const root = d3.treemap<TreeNode>()
@@ -383,7 +377,7 @@ export class TreemapComponent implements OnInit {
     if (d.children) return 'var(--parent-color, #b4cede)';
     return 'var(--leaf-color, #99bcd2)';
   }
- 
+
   private getName(d: TreemapNode): string {
     return d.ancestors().reverse().map(d => d.data.name).join("/");
   }
@@ -437,11 +431,11 @@ export class TreemapComponent implements OnInit {
     text.append("tspan")
       .attr("x", 3)
       .attr("y", "1.1em")
-      .text(d => d.data.type || d.data.name2 || "");
+      .text(d => d.data.name || d.data.name2 || "");
 
     this.position(group, root);
   }
- //Düğümleri x ve y koordinatlarına göre pozisyonlar.
+  //Düğümleri x ve y koordinatlarına göre pozisyonlar.
   private position(group: d3.Selection<SVGGElement, unknown, null, undefined>, root: TreemapNode): void {
     group.selectAll("g")
       .attr("transform", d => {
@@ -472,14 +466,25 @@ export class TreemapComponent implements OnInit {
     this.x.domain([d.x0, d.x1]);
     this.y.domain([d.y0, d.y1]);
 
-    this.svg.transition()
+    // Geçiş animasyonu
+    const transition = this.svg.transition()
       .duration(750)
-      .call(t => group0.transition(t as any).remove()
-        .call(g => this.position(g.selection(), d.parent as TreemapNode)))
-      .call(t => group1.transition(t as any)
-        .call(g => this.position(g.selection(), d)));
-  }
+      .ease(d3.easeCubicInOut); // Daha yumuşak bir geçiş için easing fonksiyonu
 
+    // İlk grup için geçiş (opacity azaltılır ve pozisyon güncellenir)
+    group0
+      .transition(transition as any)
+      .style("opacity", 0)
+      .call(g => this.position(g.selection(), d.parent as TreemapNode))
+      .remove(); // Eski grup silinir
+
+    // Yeni grup için geçiş (opacity artırılır ve pozisyon güncellenir)
+    group1
+      .style("opacity", 0)
+      .transition(transition as any)
+      .style("opacity", 1)
+      .call(g => this.position(g.selection(), d));
+  }
   private zoomout(d: TreemapNode): void {
     if (!d.parent) return;
 
@@ -490,14 +495,48 @@ export class TreemapComponent implements OnInit {
     this.x.domain([d.parent.x0, d.parent.x1]);
     this.y.domain([d.parent.y0, d.parent.y1]);
 
-    this.svg.transition()
+    // Geçiş animasyonu
+    const transition = d3.transition("zoomOutTransition") // Geçişin adını tanımlıyoruz
       .duration(750)
-      .call(t => group0.transition(t as any).remove()
-        .call(g => this.position(g.selection(), d)))
-      .call(t => group1.transition(t as any)
-        .call(g => this.position(g.selection(), d.parent as TreemapNode)));
-  }
+      .ease(d3.easeCubicInOut); // Daha yumuşak bir geçiş için easing fonksiyonu
+
+    // İlk grup için geçiş (opacity azaltılır ve pozisyon güncellenir)
+    group0
+      .transition(transition as any) // TypeScript'teki tür uyumsuzluğunu aşmak için `as any` kullanıyoruz
+      .style("opacity", 0)
+      .call(g => this.position(g.selection(), d))
+      .remove(); // Eski grup silinir
+
+    // Yeni grup için geçiş (opacity artırılır ve pozisyon güncellenir)
+    group1
+      .style("opacity", 0)
+      .transition(transition as any)
+      .style("opacity", 1)
+      .call(g => this.position(g.selection(), d.parent as TreemapNode));
 }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
