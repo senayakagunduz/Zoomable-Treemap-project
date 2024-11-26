@@ -24,17 +24,17 @@ export const treemapData: TreeNode = {
         {
             id: "x-acs-subnet--b02d68a5-12ab-4e53-b57f-7b02700aad24",
             type: "x-acs-subnet",
-            name: "x-acs-subnet--b",
+            name: "x-acs-subnet--b02d68a5-12ab",
             children: [
                 {
                     id: "x-acs-device--d1ae3fd1-704c-5b3f-aaf2-c0e10755b09a",
                     type: "x-acs-device",
-                    name: "x-acs-device--d1",
+                    name: "x-acs-device--d1ae3fd1-704c-5b3f",
                     children: [
                         {
                             id: "user-account--c628c9d7-46b3-5653-9e16-d474ec3b1311",
                             type: "user-account",
-                            name: "user-account--c6",
+                            name: "user-account--c628c9d7-46b3-5653",
                             children: [],
                             user_id: "0",
                             account_login: "root",
@@ -44,7 +44,7 @@ export const treemapData: TreeNode = {
                         {
                             id: "user-account--bd68268a-4405-5d3c-bfa8-1101038a104c",
                             type: "user-account",
-                            name: "user-account--bd",
+                            name: "user-account--bd68268a-4405",
                             children: [],
                             user_id: "1000",
                             account_login: "employee",
@@ -53,7 +53,7 @@ export const treemapData: TreeNode = {
                         {
                             id: "process--6c688576-4b95-4d7f-9971-f1441755bc55",
                             type: "process",
-                            name: "process--6c",
+                            name: "process--6c688576-4b95-4d7f",
                             children: [],
                             name2: "main-static",
                             pid: 1,
@@ -69,15 +69,9 @@ export const treemapData: TreeNode = {
                             pid: 2,
                             command_line: "sshd",
                         },
+                       
                         {
-                            id: "directory--c11a3267-8e4e-5d97-9182-981a345fad09",//** */
-                            type: "directory",
-                            name: "directory--c1e",
-                            children: [],
-                            path: "/etc",
-                        },
-                        {
-                            id: "directory--c11a3267-8e4e-5d97-9182-981a345fad091",//bunun id sine 1 ekledim, üstteki ile aynıydı çünkü
+                            id: "directory--c11a3267-8e4e-5d97-9182-981a345fad09",//bunun id sine 1 ekledim, üstteki ile aynıydı çünkü
                             type: "directory",
                             name: "directory--c1",
                             path: "/etc",
@@ -137,13 +131,7 @@ export const treemapData: TreeNode = {
                             ],
 
                         },
-                        {
-                            id: "directory--c9729dd5-e253-5e1a-9865-db3750601b70",//** */
-                            name: "directory--c9729dd5",
-                            type: "directory",
-                            children: [],
-                            path: "/bin",
-                        },
+                     
                         {
                             id: "directory--c9729dd5-e253-5e1a-9865-db3750601b70",//** */
                             type: "directory",
@@ -220,15 +208,9 @@ export const treemapData: TreeNode = {
                             ],
 
                         },
+                        
                         {
-                            id: "directory--ff245550-2193-55c2-a6f2-da711d07926a",//*** */
-                            type: "directory",
-                            name:"directory--ff2",
-                            children: [],
-                            path: "/home/employee",
-                        },
-                        {
-                            id: "directory--ff245550-2193-55c2-a6f2-da711d07926a",//** */
+                            id: "directory--ff245550-2193-55c2-a6f2-da711d07926a2",//** */
                             type: "directory",
                             name:"directory--ff24",
                             path: "/home/employee",
@@ -283,13 +265,7 @@ export const treemapData: TreeNode = {
                             ],
                             
                         },
-                        {
-                            id: "directory--cbca4731-6300-543c-9f48-b2e43627413e",//** */
-                            type: "directory",
-                            name: "directory--cbca4731y",
-                            children: [],
-                            path: "/root"
-                        },
+                      
                         {
                             id: "directory--cbca4731-6300-543c-9f48-b2e43627413e",//** */
                             type: "directory",
