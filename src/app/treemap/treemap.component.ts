@@ -269,6 +269,7 @@ import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import * as d3 from 'd3';
 import { TreeNode, treemapData } from './exmp';
 
+
 interface TreemapNode extends d3.HierarchyRectangularNode<TreeNode> {
   leafUid?: { id: string; href: string };
   clipUid?: { id: string; href: string };
@@ -342,6 +343,10 @@ export class TreemapComponent implements OnInit {
     this.x = d3.scaleLinear().rangeRound([0, this.width]);
     this.y = d3.scaleLinear().rangeRound([0, this.height]);
 
+    // Dinamik boyutlandırma için ölçek
+    const iconScale = d3.scaleLinear().domain([0, 1]).range([12, 24]);
+    const textScale = d3.scaleLinear().domain([0, 1]).range([8, 16]);
+
     //treemapRef: DOM'daki SVG elemanına erişmek için kullanılır.
     this.svg = d3.select(this.treemapRef.nativeElement)
       .attr("viewBox", [0.5, -30.5, this.width, this.height + 30])
@@ -382,11 +387,35 @@ export class TreemapComponent implements OnInit {
     return d.ancestors().reverse().map(d => d.data.name).join("/");
   }
 
+  private getIconPath(type: string): string {
+    const iconMap: { [key: string]: string } = {
+      'bundle--16': '/assets/icons/software.svg',
+      'x-acs-subnet': '/assets/icons/x-acs-subnet.svg',
+      'x-acs-device': '/assets/icons/x-acs-device.svg',
+      'user-account': '/assets/icons/user-account.svg',
+      'process': '/assets/icons/process.svg',
+      'directory': '/assets/icons/directory.svg',
+      'file': '/assets/icons/file.svg',
+      // 'malware': '/assets/icons/malware.svg',
+      // 'note': '/assets/icons/note.svg',
+      // 'opinion': '/assets/icons/opinion.svg',
+      // 'url': '/assets/icons/url.svg',
+      'x-acs-credential': '/assets/icons/x-acs-credential.svg',
+    };
+
+    return iconMap[type] || '/assets/icons/default-icon.svg'; // Varsayılan ikon
+  }
+
   private render(group: d3.Selection<SVGGElement, unknown, null, undefined>, root: TreemapNode): void {
+
     const node = group
       .selectAll<SVGGElement, TreemapNode>("g")
       .data(root.children ? root.children.concat(root) : [root])
-      .join("g");
+      .join("g")
+    //Parent düğümleri her zaman en alta yerleştirin,Bu sayede parent düğüm, çocuk düğümlerin altında yer alır ve çocuk düğümler görünür olur.
+    node.filter(d => d === root).lower();
+
+    //node.filter(d => d === root).selectAll("image").remove(); // Parent iconları kaldır
 
     node.filter(d => (d === root ? !!d.parent : !!d.children))
       .attr("cursor", "pointer")
@@ -405,14 +434,20 @@ export class TreemapComponent implements OnInit {
       .attr("stroke", "#fff")
       .attr("stroke-width", 1);
 
+    node.append("rect")
+      .attr("x", d => (this.x(d.x1) - this.x(d.x0)) / 2 - 15) // 10px padding için genişlik artırıldı
+      .attr("y", d => (this.y(d.y1) - this.y(d.y0)) / 2 - 15) // 10px padding için yükseklik artırıldı
+      .attr("width", 40) // 20px icon + 2 * 10px padding
+      .attr("height", 40)
+      .attr("fill", "white")
+      .attr("rx", 5) // Köşeleri yuvarlatmak için
+      .attr("ry", 5);
+
     node.append("clipPath")
       .attr("id", d => {
         d.clipUid = { id: `clip-${Math.random().toString(36).substr(2, 9)}`, href: `#clip-${Math.random().toString(36).substr(2, 9)}` };
         return d.clipUid.id;
       })
-    //şuan link yok, ondan kaldırdım
-    //.append("use")
-    //.attr("xlink:href", d => d.leafUid?.href || '');
 
     const text = node.append("text")
       .attr("clip-path", d => d.clipUid ? `url(${d.clipUid.href})` : null)
@@ -420,13 +455,31 @@ export class TreemapComponent implements OnInit {
       .style("fill", "#000000")
 
     //açıklama yapılacak olan yer
-    // node.append("text")
-    //   .attr("x", d => (this.x(d.x1) - this.x(d.x0)) / 2)
-    //   .attr("y", d => (this.y(d.y1) - this.y(d.y0)) / 2 + 35)
-    //   .attr("text-anchor", "middle")
-    //   .attr("font-size", 10)
-    //   .attr("fill", "#666")
-    //   .text(d => d.data.type || "No description available"); 
+    node.append("text")
+      .attr("x", d => (this.x(d.x1) - this.x(d.x0)) / 2 + 8)
+      .attr("y", d => (this.y(d.y1) - this.y(d.y0)) / 2 + 40)
+      .attr("text-anchor", "middle")
+      .attr("font-size", 10)
+      .attr("fill", "#666")
+      .text(d => d.data.type || "")
+
+    //açıklama yapılacak olan yer
+    node.append("text")
+      .attr("x", d => (this.x(d.x1) - this.x(d.x0)) / 2)
+      .attr("y", d => (this.y(d.y1) - this.y(d.y0)) / 2 + 48)
+      .attr("text-anchor", "middle")
+      .attr("font-size", 10)
+      .attr("fill", "#666")
+      .text(d => d.data.name2 || "")
+
+    // Path bilgisini text in altına yazdırma
+    node.append("text")
+      .attr("x", d => (this.x(d.x1) - this.x(d.x0)) / 2) // Sağ kenardan 5px içeride
+      .attr("y", d => (this.y(d.y1) - this.y(d.y0)) / 2 + 58)
+      .attr("text-anchor", "middle")
+      .attr("font-size", 10)
+      .attr("fill", "#666")
+      .text(d => d.data?.path || "");
 
     text.append("tspan")
       .attr("x", 3)
@@ -434,7 +487,21 @@ export class TreemapComponent implements OnInit {
       .text(d => d.data.name || d.data.name2 || "");
 
     this.position(group, root);
+
+    node.append("image")
+      .attr("x", d => (this.x(d.x1) - this.x(d.x0)) / 2 - 5)
+      .attr("y", d => (this.y(d.y1) - this.y(d.y0)) / 2 - 5)
+      .attr("width", 20)
+      .attr("height", 20)
+      .attr("href", d => this.getIconPath(d.data.type || ''))
+      .attr("preserveAspectRatio", "xMidYMid meet")
+      .style("display", d => {
+        // Eğer mevcut düğüm açık olan seviyedeyse (root) veya onun direkt alt düğümüyse, ikonu göster
+        return d === root || (root.children && root.children.includes(d)) ? 'block' : 'none';
+      });
   }
+
+
   //Düğümleri x ve y koordinatlarına göre pozisyonlar.
   private position(group: d3.Selection<SVGGElement, unknown, null, undefined>, root: TreemapNode): void {
     group.selectAll("g")
@@ -460,6 +527,7 @@ export class TreemapComponent implements OnInit {
   }
 
   private zoomin(d: TreemapNode): void {
+
     const group0 = this.group.attr("pointer-events", "none");
     const group1 = this.group = this.svg.append("g").call(g => this.render(g, d));
 
@@ -484,6 +552,8 @@ export class TreemapComponent implements OnInit {
       .transition(transition as any)
       .style("opacity", 1)
       .call(g => this.position(g.selection(), d));
+
+
   }
   private zoomout(d: TreemapNode): void {
     if (!d.parent) return;
@@ -513,7 +583,7 @@ export class TreemapComponent implements OnInit {
       .transition(transition as any)
       .style("opacity", 1)
       .call(g => this.position(g.selection(), d.parent as TreemapNode));
-}
+  }
 }
 
 
