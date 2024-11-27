@@ -79,15 +79,11 @@ export class TreemapComponent implements OnInit {
     this.x = d3.scaleLinear().rangeRound([0, this.width]);
     this.y = d3.scaleLinear().rangeRound([0, this.height]);
 
-    // Dinamik boyutlandırma için ölçek
-    const iconScale = d3.scaleLinear().domain([0, 1]).range([12, 24]);
-    const textScale = d3.scaleLinear().domain([0, 1]).range([8, 16]);
-
     //treemapRef: DOM'daki SVG elemanına erişmek için kullanılır.
     this.svg = d3.select(this.treemapRef.nativeElement)
-      .attr("viewBox", [0.5, -30.5, this.width, this.height + 30])
+      .attr("viewBox", [0.5, -30.5, this.width, this.height])
       .attr("width", this.width)
-      .attr("height", this.height + 30)
+      .attr("height", this.height)
       .attr("style", "max-width: 100%; height: auto;");
 
 
@@ -111,12 +107,12 @@ export class TreemapComponent implements OnInit {
     this.group = this.svg.append("g");
     this.render(this.group, root);
   }
-
+  //node ları görselleştiren rect leri boyar
   private getNodeColor(d: TreemapNode): string {
     //rootun rengini burdan verdim
     if (d.parent === null) return 'var(--root-color, #d0e0ea)';
     if (d.children) return 'var(--parent-color, #b4cede)';
-    return 'var(--leaf-color, #99bcd2)';
+    return 'var(--leaf-color, #C6DAE6)';
   }
 
   private getName(d: TreemapNode): string {
@@ -132,10 +128,6 @@ export class TreemapComponent implements OnInit {
       'process': '/assets/icons/process.svg',
       'directory': '/assets/icons/directory.svg',
       'file': '/assets/icons/file.svg',
-      // 'malware': '/assets/icons/malware.svg',
-      // 'note': '/assets/icons/note.svg',
-      // 'opinion': '/assets/icons/opinion.svg',
-      // 'url': '/assets/icons/url.svg',
       'x-acs-credential': '/assets/icons/x-acs-credential.svg',
     };
 
@@ -143,7 +135,9 @@ export class TreemapComponent implements OnInit {
   }
 
   private render(group: d3.Selection<SVGGElement, unknown, null, undefined>, root: TreemapNode): void {
-
+    //Bu kod parçası, node öğelerini oluştururken kök düğümün (root) diğer düğümlerin altına yerleştirilmesini sağlar.
+    // Bu sayede, kök düğüm çocuklarının üzerine yerleşmez ve çocuk düğümler daha görünür olur. 
+    // Kodun amacı, görselleştirme üzerinde çocuk düğümlerin her zaman görünür olmasını sağlamak, böylece kök düğüm sadece arka planda yer alır.
     const node = group
       .selectAll<SVGGElement, TreemapNode>("g")
       .data(root.children ? root.children.concat(root) : [root])
@@ -153,14 +147,18 @@ export class TreemapComponent implements OnInit {
 
     //node.filter(d => d === root).selectAll("image").remove(); // Parent iconları kaldır
 
+    // Bu kod, belirli node öğelerine tıklanabilir (cursor: pointer) özelliği ekler.
+    // Kullanıcı bu düğümlere tıkladığında, eğer tıklanan düğüm kök düğümse zoomout fonksiyonu, diğer tüm düğümler için ise zoomin fonksiyonu çağrılır.
+    // Bu, genellikle bir grafik üzerinde yakınlaştırma/uzaklaştırma işlevi sağlamak için kullanılan bir yaklaşımdır.
     node.filter(d => (d === root ? !!d.parent : !!d.children))
       .attr("cursor", "pointer")
       .on("click", (event, d) => d === root ? this.zoomout(d) : this.zoomin(d));
 
+    //Kullanıcı fareyi bir node üzerine getirdiğinde, o düğümle ilgili açıklayıcı bir metin gösterilir.
     node.append("title")
       .text(d => `${this.getName(d)}\n${this.format(d.value || 0)}`);
 
-    //dörtgenlerin rengini burdan veriyoruz
+    //herbir node u dörtgen hale getiriyoruz, sonra da rengini ve sitillerini burdan veriyoruz
     node.append("rect")
       .attr("id", d => {
         d.leafUid = { id: `leaf-${Math.random().toString(36).substr(2, 9)}`, href: `#leaf-${Math.random().toString(36).substr(2, 9)}` };
@@ -168,8 +166,11 @@ export class TreemapComponent implements OnInit {
       })
       .attr("fill", d => this.getNodeColor(d))
       .attr("stroke", "#fff")
-      .attr("stroke-width", 1);
+      .attr("stroke-width", 10)
+      .attr("rx", 15) // Köşeleri yuvarlatmak için
+      .attr("ry", 15);
 
+    //herbir iconun arkasında backgrounc color ile rect yaptık, sitillerini verdik
     node.append("rect")
       .attr("x", d => (this.x(d.x1) - this.x(d.x0)) / 2 - 15) // 10px padding için genişlik artırıldı
       .attr("y", d => (this.y(d.y1) - this.y(d.y0)) / 2 - 15) // 10px padding için yükseklik artırıldı
@@ -177,52 +178,61 @@ export class TreemapComponent implements OnInit {
       .attr("height", 40)
       .attr("fill", "white")
       .attr("rx", 5) // Köşeleri yuvarlatmak için
-      .attr("ry", 5);
+      .attr("ry", 5)
+      .attr("stroke", "gray") // Kenarlık rengi
+      .attr("stroke-width", 2) // Kenarlık kalınlığı
+      .attr("stroke-dasharray", "4,2"); // Kesik çizgi
 
+    // Bu kod, her node için benzersiz bir clipPath öğesi ekler. Her clipPath öğesinin id ve href değerleri, rastgele oluşturulan benzersiz dizelerle atanır.
     node.append("clipPath")
       .attr("id", d => {
         d.clipUid = { id: `clip-${Math.random().toString(36).substr(2, 9)}`, href: `#clip-${Math.random().toString(36).substr(2, 9)}` };
         return d.clipUid.id;
       })
 
-    const text = node.append("text")
-      .attr("clip-path", d => d.clipUid ? `url(${d.clipUid.href})` : null)
-      .attr("class", "node-text")
-      .style("fill", "#000000")
+    // const text = node.append("text")
+    //   .attr("clip-path", d => d.clipUid ? `url(${d.clipUid.href})` : null)
+    //   .attr("class", "node-text")
+    //   .style("fill", "#000000")
 
-    //açıklama yapılacak olan yer
+
+    //iconun altındaki type verisi
     node.append("text")
-      .attr("x", d => (this.x(d.x1) - this.x(d.x0)) / 2 + 8)
+      .attr("x", d => (this.x(d.x1) - this.x(d.x0)) / 2 + 5)
       .attr("y", d => (this.y(d.y1) - this.y(d.y0)) / 2 + 40)
       .attr("text-anchor", "middle")
       .attr("font-size", 10)
       .attr("fill", "#666")
       .text(d => d.data.type || "")
 
-    //açıklama yapılacak olan yer
+    //iconun altındaki name2 verisi
     node.append("text")
       .attr("x", d => (this.x(d.x1) - this.x(d.x0)) / 2)
-      .attr("y", d => (this.y(d.y1) - this.y(d.y0)) / 2 + 48)
+      .attr("y", d => (this.y(d.y1) - this.y(d.y0)) / 2 + 50)
       .attr("text-anchor", "middle")
       .attr("font-size", 10)
       .attr("fill", "#666")
       .text(d => d.data.name2 || "")
 
-    // Path bilgisini text in altına yazdırma
+    // iconun altındaki path verisi
     node.append("text")
       .attr("x", d => (this.x(d.x1) - this.x(d.x0)) / 2) // Sağ kenardan 5px içeride
-      .attr("y", d => (this.y(d.y1) - this.y(d.y0)) / 2 + 58)
+      .attr("y", d => (this.y(d.y1) - this.y(d.y0)) / 2 + 60)
       .attr("text-anchor", "middle")
       .attr("font-size", 10)
       .attr("fill", "#666")
       .text(d => d.data?.path || "");
 
-    text.append("tspan")
-      .attr("x", 3)
-      .attr("y", "1.1em")
-      .text(d => d.data.name || d.data.name2 || "");
+    //Ekranın sol üst köşesindeki dörtgenin name ini kaldırdım
+    // text.append("tspan")
+    //   .attr("x", 3)
+    //   .attr("y", "1.1em")
+    //   .text(d => d.data.name || d.data.name2 || "");
 
     this.position(group, root);
+
+    const marginX = 5; // Soldan mesafe
+    const marginY = 5; // Üstten mesafe
 
     node.append("image")
       .attr("x", d => (this.x(d.x1) - this.x(d.x0)) / 2 - 5)
@@ -233,7 +243,12 @@ export class TreemapComponent implements OnInit {
       .attr("preserveAspectRatio", "xMidYMid meet")
       .style("display", d => {
         // Eğer mevcut düğüm açık olan seviyedeyse (root) veya onun direkt alt düğümüyse, ikonu göster
-        return d === root || (root.children && root.children.includes(d)) ? 'block' : 'none';
+        // return d === root || (root.children && root.children.includes(d)) ? 'block' : 'none';
+        // Show icons for current level and its immediate children
+        const isCurrentLevel = d === root;
+        const isChild = root.children && root.children.includes(d);
+        const isParent = d.parent === root;
+        return (isCurrentLevel || isChild || isParent) ? 'block' : 'none';
       });
   }
 
@@ -261,6 +276,8 @@ export class TreemapComponent implements OnInit {
           this.y(node.y1) - this.y(node.y0);
       });
   }
+
+
 
   private zoomin(d: TreemapNode): void {
 
@@ -294,10 +311,14 @@ export class TreemapComponent implements OnInit {
   private zoomout(d: TreemapNode): void {
     if (!d.parent) return;
 
+    // Mevcut grup için pointer-events devre dışı bırakılır
     const group0 = this.group.attr("pointer-events", "none");
+
+    // Yeni grup oluşturulur ve parent düğüm için render edilir
     const group1 = this.group = this.svg.insert("g", "*")
       .call(g => this.render(g, d.parent as TreemapNode));
 
+    // Zoom-out için domain güncellenir
     this.x.domain([d.parent.x0, d.parent.x1]);
     this.y.domain([d.parent.y0, d.parent.y1]);
 
@@ -307,6 +328,11 @@ export class TreemapComponent implements OnInit {
       .ease(d3.easeCubicInOut); // Daha yumuşak bir geçiş için easing fonksiyonu
 
     // İlk grup için geçiş (opacity azaltılır ve pozisyon güncellenir)
+    group0.selectAll<SVGImageElement, TreemapNode>("image")
+      .style("display", d => {
+        const node = d as TreemapNode;
+        return node === d.parent || (d.parent && d.parent.children && d.parent.children.includes(node)) ? 'block' : 'none';
+      });
     group0
       .transition(transition as any) // TypeScript'teki tür uyumsuzluğunu aşmak için `as any` kullanıyoruz
       .style("opacity", 0)
@@ -319,7 +345,16 @@ export class TreemapComponent implements OnInit {
       .transition(transition as any)
       .style("opacity", 1)
       .call(g => this.position(g.selection(), d.parent as TreemapNode));
+
+    group1.selectAll<SVGImageElement, TreemapNode>("image")
+      .style("display", (node: TreemapNode) => {
+        return node === d.parent || (d.parent && d.parent.children && d.parent.children.includes(node)) ? 'block' : 'none';
+      });
   }
+
+
+
+
 }
 
 
