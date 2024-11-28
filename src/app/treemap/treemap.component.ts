@@ -6,7 +6,9 @@ import * as d3 from 'd3';
 import { TreeNode, treemapData } from './exmp';
 
 @Component({
+  //selector: Defines the component to be used with the <app-treemap> tag in HTML
   selector: 'app-treemap',
+  //template: Defines a div that contains the SVG element. Treemap will be drawn inside the SVG
   template: `<div class="w-full h-full">
       <svg #treemapSvg class="w-full h-auto"></svg>
     </div>`,
@@ -42,6 +44,7 @@ import { TreeNode, treemapData } from './exmp';
   `]
 })
 export class TreemapComponent implements OnInit {
+  //@ViewChild('treemapSvg'): Used to access the SVG element in the template
   @ViewChild('treemapSvg', { static: true }) svgRef!: ElementRef<SVGSVGElement>;
 
   private width = 928;
@@ -50,15 +53,18 @@ export class TreemapComponent implements OnInit {
   private svg!: d3.Selection<SVGElement, unknown, null, undefined>;
   private x = d3.scaleLinear().range([0, this.width]);
   private y = d3.scaleLinear().range([0, this.height]);
+  //Current root node in the Treemap.
   private currentRoot!: TreeNode;
 
   ngOnInit() { }
 
+  //ngAfterViewInit: createTreemap is called after the visual DOM is loaded. SVG is populated at this stage.
   ngAfterViewInit() {
     this.createTreemap();
   }
 
   private createTreemap() {
+    //SVG'yi seçer ve boyut ayarlarını yapar.
     const svg = d3.select(this.svgRef.nativeElement)
       .attr("viewBox", [0.5, -30.5, this.width, this.height])
       .style("max-width", "100%")
@@ -70,12 +76,13 @@ export class TreemapComponent implements OnInit {
     const x = d3.scaleLinear().rangeRound([0, this.width]);
     const y = d3.scaleLinear().rangeRound([0, this.height]);
 
+    //Düğümün rengine karar verir
     const getNodeColor = (d: any) => {
       if (!d.parent) return '#d0e0ea';
       if (d.children) return '#b4cede';
       return '#C6DAE6';
     };
-
+    //Düğüm türüne göre bir ikonu döndürür.
     const getIconPath = (type: string) => {
       const iconMap: { [key: string]: string } = {
         'bundle--16': '/assets/icons/software.svg',
@@ -88,7 +95,7 @@ export class TreemapComponent implements OnInit {
       };
       return iconMap[type] || '/assets/icons/default-icon.svg';
     };
-
+    // Düğümlerin yerleşim koordinatlarını hesaplar.
     const tile = (node: any, x0: number, y0: number, x1: number, y1: number) => {
       d3.treemapBinary(node, 0, 0, this.width, this.height);
       for (const child of node.children || []) {
@@ -98,7 +105,7 @@ export class TreemapComponent implements OnInit {
         child.y1 = y0 + (child.y1 / this.height) * (y1 - y0);
       }
     };
-
+//Düğümün SVG'deki pozisyonunu ayarlar.
     const position = (group: any, root: any) => {
       group.selectAll("g")
         .attr("transform", (d: any) => {
@@ -113,7 +120,7 @@ export class TreemapComponent implements OnInit {
         })
         .attr("height", (d: any) => {
           return d === root ? 30 : y(d.y1) - y(d.y0);
-        });
+        })
 
       group.selectAll("g.icon-group")
         .attr("transform", (d: any) => {
@@ -164,75 +171,149 @@ export class TreemapComponent implements OnInit {
         .call((t: any) => group1.transition(t)
           .call((g: any) => position(g, d.parent)));
     };
+//Düğümleri g öğesi olarak SVG'ye ekler.rect, image, ve text öğeleri ile düğüm içeriğini oluşturur.
+//İkonları, metinleri ve düğüm stillerini uygular.
+    // const render = (group: any, root: any) => {
+    //   const node = group
+    //     .selectAll("g")
+    //     .data(root.children ? root.children.concat(root) : [root])
+    //     .join("g");
 
+    //   node.filter((d: any) => d === root ? d.parent : d.children)
+    //     .attr("cursor", "pointer")
+    //     .on("click", (event: any, d: any) => d === root ? zoomout(event, d) : zoomin(event, d));
+
+    //   node.append("rect")
+    //     .attr("class", "node-rect")
+    //     .attr("fill", (d: any) => getNodeColor(d))
+    //     .attr("stroke", "#fff")
+    //     .attr("stroke-width", 4)
+    //     .attr("rx", 15)
+    //     .attr("ry", 15);
+
+    //   const iconGroup = node.append("g")
+    //     .attr("class", "icon-group");
+
+    //   //create rectangle surrounding the image
+    //   iconGroup.append("rect")
+    //     .attr("width", 40)
+    //     .attr("height", 40)
+    //     .attr("x", -20)
+    //     .attr("y", -20)
+    //     .attr("fill", "white")
+    //     .attr("rx", 5)
+    //     .attr("ry", 5)
+    //     .attr("stroke", "gray")
+    //     .attr("stroke-width", 2)
+    //     .attr("stroke-dasharray", "4,2");
+
+    //   //create icon as an image 
+    //   iconGroup.append("image")
+    //     .attr("width", 20)
+    //     .attr("height", 20)
+    //     .attr("x", -10)
+    //     .attr("y", -10)
+    //     .attr("href", (d: any) => getIconPath(d.data.type))
+    //     .attr("preserveAspectRatio", "xMidYMid meet");
+
+    //   //create type info below the icon
+    //   iconGroup.append("text")
+    //     .attr("y", 30)
+    //     .attr("text-anchor", "middle")
+    //     .attr("font-size", "10px")
+    //     .attr("fill", "#666")
+    //     .text((d: any) => d.data.type || "");
+
+    //   //create name2 info below the icon
+    //   iconGroup.append("text")
+    //     .attr("y", 40)
+    //     .attr("text-anchor", "middle")
+    //     .attr("font-size", "10px")
+    //     .attr("fill", "#666")
+    //     .text((d: any) => d.data.name2 || "");
+
+    //   //create path info below the icon
+    //   iconGroup.append("text")
+    //     .attr("y", 55)
+    //     .attr("text-anchor", "middle")
+    //     .attr("font-size", "10px")
+    //     .attr("fill", "#666")
+    //     .text((d: any) => d.data.path || "");
+
+    //   position(group, root);
+    // };
     const render = (group: any, root: any) => {
-      const node = group
-        .selectAll("g")
-        .data(root.children ? root.children.concat(root) : [root])
-        .join("g");
+  const node = group
+    .selectAll("g")
+    .data(root.children ? root.children.concat(root) : [root])
+    .join("g");
 
-      node.filter((d: any) => d === root ? d.parent : d.children)
-        .attr("cursor", "pointer")
-        .on("click", (event: any, d: any) => d === root ? zoomout(event, d) : zoomin(event, d));
+  node.filter((d: any) => (d === root ? d.parent : d.children))
+    .attr("cursor", "pointer")
+    .on("click", (event: any, d: any) => (d === root ? zoomout(event, d) : zoomin(event, d)));
 
-      node.append("rect")
-        .attr("class", "node-rect")
-        .attr("fill", (d: any) => getNodeColor(d))
-        .attr("stroke", "#fff")
-        .attr("stroke-width", 4)
-        .attr("rx", 15)
-        .attr("ry", 15);
+  node.append("rect")
+    .attr("class", "node-rect")
+    .attr("fill", (d: any) => getNodeColor(d))
+    .attr("stroke", "#fff")
+    .attr("stroke-width", 4)
+    .attr("rx", 15)
+    .attr("ry", 15);
 
-      const iconGroup = node.append("g")
-        .attr("class", "icon-group");
+  const iconGroup = node.append("g")
+    .attr("class", "icon-group")
+    .attr("transform", (d: any) => {
+      if (d === root) {
+        return "translate(-10, 0)"; // root düğümü için sola kaydırma
+      }
+      return ""; // Diğer düğümler etkilenmesin
+    });
 
-      //create rectangle surrounding the image
-      iconGroup.append("rect")
-        .attr("width", 40)
-        .attr("height", 40)
-        .attr("x", -20)
-        .attr("y", -20)
-        .attr("fill", "white")
-        .attr("rx", 5)
-        .attr("ry", 5)
-        .attr("stroke", "gray")
-        .attr("stroke-width", 2)
-        .attr("stroke-dasharray", "4,2");
-      //create icon as an image 
-      iconGroup.append("image")
-        .attr("width", 20)
-        .attr("height", 20)
-        .attr("x", -10)
-        .attr("y", -10)
-        .attr("href", (d: any) => getIconPath(d.data.type))
-        .attr("preserveAspectRatio", "xMidYMid meet");
+  // Root'taki rect
+  iconGroup.append("rect")
+    // .attr("width", 40)
+    // .attr("height", 40)
+    .attr("width", (d: any) => (d === root ? 20 : 40))
+    .attr("height", (d: any) => (d === root ? 20 : 40))
+    // .attr("x", -20)
+    // .attr("y", -20)
+    .attr("fill", "white")
+    .attr("rx", (d: any) => (d === root ? 0 : 5))
+    .attr("ry", (d: any) => (d === root ? 0 : 5))
+    // .attr("rx", 5)
+    // .attr("ry", 5)
+    .attr("stroke", "gray")
+    .attr("stroke-width", 2)
+    .attr("x", (d: any) => (d === root ? 12 : -20))
+    .attr("y", (d: any) => (d === root ? 2 : -20))
+    .attr("stroke-dasharray", "4,2");
 
-      //create type info below the icon
-      iconGroup.append("text")
-        .attr("y", 30)
-        .attr("text-anchor", "middle")
-        .attr("font-size", "10px")
-        .attr("fill", "#666")
-        .text((d: any) => d.data.type || "");
+  // Root'taki image
+  iconGroup.append("image")
+  .attr("width", (d: any) => (d === root ? 15 : 20))
+    .attr("height", (d: any) => (d === root ? 15 : 20))
+    // .attr("width", 20)
+    // .attr("height", 20)
+    // .attr("x", -10)
+    // .attr("y", -10)
+    .attr("href", (d: any) => getIconPath(d.data.type))
+    .attr("x", (d: any) => (d === root ? 15 : -10))
+    .attr("y", (d: any) => (d === root ? 2 : -10))
+    .attr("preserveAspectRatio", "xMidYMid meet");
 
-      //create name2 info below the icon
-      iconGroup.append("text")
-        .attr("y", 40)
-        .attr("text-anchor", "middle")
-        .attr("font-size", "10px")
-        .attr("fill", "#666")
-        .text((d: any) => d.data.name2 || "");
+  // İsim metni
+  iconGroup.append("text")
+  .attr("x", (d: any) => (d === root ? 30 : ""))
+  .attr("y", (d: any) => (d === root ? 30 : 30))
+    //.attr("y", 30)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "10px")
+    .attr("fill", "#666")
+    .text((d: any) => d.data.type || "");
 
-      //create path info below the icon
-      iconGroup.append("text")
-        .attr("y", 55)
-        .attr("text-anchor", "middle")
-        .attr("font-size", "10px")
-        .attr("fill", "#666")
-        .text((d: any) => d.data.path || "");
+  position(group, root);
+};
 
-      position(group, root);
-    };
 
     // Initialize visualization
     const hierarchy = d3.hierarchy(treemapData)
